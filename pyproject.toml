@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "youglish_interval_bot"
+version = "0.1.0"
+description = ""
+authors = ["IAmIrina <irina.vl.kiseleva@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+ydb = {extras = ["yc"], version = "^2.13.3"}
+pydantic = "^1.10.6"
+python-dotenv = "^1.0.0"
+requests = "^2.28.2"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^6.0.0"
+autopep8 = "^2.0.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

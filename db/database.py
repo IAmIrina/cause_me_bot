@@ -1,6 +1,7 @@
+import logging
+
 import ydb
 import ydb.iam
-import logging
 
 from config import settings
 

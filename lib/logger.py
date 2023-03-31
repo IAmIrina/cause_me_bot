@@ -24,11 +24,6 @@ LOGGING = {
             'handlers': ['stdout'],
             'propagate': False,
         },
-        'helpdesk': {
-            'level': log_level,
-            'handlers': ['stdout'],
-            'propagate': False,
-        },
     },
     'root': {
         'level': log_level,

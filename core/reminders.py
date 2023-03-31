@@ -1,12 +1,10 @@
 import logging
-
 import typing as t
 import urllib.parse
 
 from db import ydb_manage
-from lib import messages
+from lib import messages, telegram, schemas
 
-from lib import telegram
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +36,19 @@ class WordReminder():
                     continue
                 chat_id = row.chat_id
             try:
+                examples = urllib.parse.quote(messages.YOUGLISH_URL.format(
+                    word=row.word), safe=':/').replace('.', '\\.')
+                keyboard = schemas.Keyboards.get_inline_keyboard(
+                    [
+                        schemas.Button(
+                            text=messages.REPEATED,
+                            callback_data=f'{schemas.Commands.REPEATED.value}{row.word}'
+                        )
+                    ],
+                )
                 self.bot.send_message(
-                    text=messages.REPEAR_WORD_TEMPLATE.format(word=urllib.parse.quote(row.word)),
                     chat_id=row.chat_id,
-                    parse_mode='MarkdownV2',
+                    **schemas.TLGResponse(text=examples, reply_markup=keyboard).dict(exclude_none=True),
                 )
             except Exception:
                 logger.exception(

@@ -1,9 +1,11 @@
 # import ydb
 
-from db import ydb_queries
 import os
-import ydb
 from collections import namedtuple
+
+import ydb
+
+from db import ydb_queries
 
 
 class Query():

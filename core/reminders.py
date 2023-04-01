@@ -42,13 +42,18 @@ class WordReminder():
                     [
                         schemas.Button(
                             text=messages.REPEATED,
-                            callback_data=f'{schemas.Commands.REPEATED.value}{row.word}'
+                            callback_data=f'{schemas.Commands.REPEATED.value}{row.word}',
                         )
                     ],
                 )
+                message = schemas.TLGResponse(
+                    text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=row.word)}{examples}',
+                    reply_markup=keyboard,
+                    parse_mode='MarkdownV2',
+                )
                 self.bot.send_message(
                     chat_id=row.chat_id,
-                    **schemas.TLGResponse(text=examples, reply_markup=keyboard).dict(exclude_none=True),
+                    **message.dict(exclude_none=True),
                 )
             except Exception:
                 logger.exception(

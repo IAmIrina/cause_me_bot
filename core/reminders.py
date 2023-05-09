@@ -17,55 +17,61 @@ class WordReminder():
         self.bot = bot
 
     def remind_to_repeat_words(self, intervals: t.List[int]) -> str:
-        ripe_words = self.pool.retry_operation_sync(self.db.get_ripe_words, max_repetition=len(intervals))
-        chat_id = None
-        for row in ripe_words:
+        users = self.pool.retry_operation_sync(self.db.get_users)
 
-            if not chat_id or chat_id != row.chat_id:
-                try:
-                    self.bot.send_message(
-                        text=messages.TIME_TO_REPEAT_WORDS,
-                        chat_id=row.chat_id,
-                    )
-                except Exception:
-                    logger.exception(
-                        'Can not send telegram message %s to chat %s',
-                        messages.TIME_TO_REPEAT_WORDS,
-                        row.chat_id,
-                    )
-                    continue
-                chat_id = row.chat_id
+        for user in users:
+            ripe_words = self.pool.retry_operation_sync(
+                self.db.get_ripe_words,
+                max_repetition=len(intervals),
+                chat_id=user.chat_id,
+            )
+            if not ripe_words:
+                continue
             try:
-                examples = urllib.parse.quote(messages.YOUGLISH_URL.format(
-                    word=row.word), safe=':/').replace('.', '\\.')
-                keyboard = schemas.Keyboards.get_inline_keyboard(
-                    [
-                        schemas.Button(
-                            text=messages.REPEATED,
-                            callback_data=f'{schemas.Commands.REPEATED.value}{row.word}',
-                        )
-                    ],
-                )
-                message = schemas.TLGResponse(
-                    text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=row.word)}{examples}',
-                    reply_markup=keyboard,
-                    parse_mode='MarkdownV2',
-                )
                 self.bot.send_message(
-                    chat_id=row.chat_id,
-                    **message.dict(exclude_none=True),
+                    text=messages.TIME_TO_REPEAT_WORDS,
+                    chat_id=user.chat_id,
                 )
             except Exception:
                 logger.exception(
                     'Can not send telegram message %s to chat %s',
-                    messages.REPEAR_WORD_TEMPLATE.format(word=row.word),
-                    row.chat_id,
+                    messages.TIME_TO_REPEAT_WORDS,
+                    user.chat_id,
                 )
                 continue
-            ripe_words = self.pool.retry_operation_sync(
-                self.db.upsert_word,
-                chat_id=row.chat_id,
-                word=row.word,
-                repetition=row.repetition + 1,
-                repeat_after=intervals[row.repetition],
-            )
+
+            for row in ripe_words:
+                try:
+                    examples = urllib.parse.quote(messages.YOUGLISH_URL.format(
+                        word=row.word), safe=':/').replace('.', '\\.')
+                    keyboard = schemas.Keyboards.get_inline_keyboard(
+                        [
+                            schemas.Button(
+                                text=messages.REPEATED,
+                                callback_data=f'{schemas.Commands.REPEATED.value}{row.word}',
+                            )
+                        ],
+                    )
+                    message = schemas.TLGResponse(
+                        text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=row.word)}{examples}',
+                        reply_markup=keyboard,
+                        parse_mode='MarkdownV2',
+                    )
+                    self.bot.send_message(
+                        chat_id=user.chat_id,
+                        **message.dict(exclude_none=True),
+                    )
+                except Exception:
+                    logger.exception(
+                        'Can not send telegram message %s to chat %s',
+                        messages.REPEAR_WORD_TEMPLATE.format(word=row.word),
+                        row.chat_id,
+                    )
+                    continue
+                ripe_words = self.pool.retry_operation_sync(
+                    self.db.upsert_word,
+                    chat_id=row.chat_id,
+                    word=row.word,
+                    repetition=row.repetition + 1,
+                    repeat_after=intervals[row.repetition],
+                )

@@ -69,12 +69,22 @@ class Query():
             commit_tx=True,
         )
 
-    def get_ripe_words(self, session, max_repetition: int):
+    def get_ripe_words(self, session, chat_id: int, max_repetition: int):
         result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
-            session.prepare(ydb_queries.RIPE_WORDS),
+            session.prepare(ydb_queries.RIPE_WORDS_BY_USER),
             {
                 '$max_repetition': max_repetition,
+                '$chat_id': chat_id,
+                '$limit': settings.daily_limit,
             },
+            commit_tx=True,
+        )
+        return result_sets[0].rows
+
+    def get_users(self, session):
+        result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
+            session.prepare(ydb_queries.GET_USERS),
+            {},
             commit_tx=True,
         )
         return result_sets[0].rows

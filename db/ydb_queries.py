@@ -45,9 +45,18 @@ DELETE_WORD = """
         DECLARE $word AS Utf8;
         DELETE FROM words WHERE chat_id = $chat_id and word = $word;
         """
+GET_USERS = """
+        SELECT
+            chat_id,
+        FROM users
+        ;
+        """
 
-RIPE_WORDS = """
+
+RIPE_WORDS_BY_USER = """
         DECLARE $max_repetition AS Int64;
+        DECLARE $chat_id AS Int64;
+        DECLARE $limit AS Uint32;
         $format = DateTime::Format("%Y-%m-%d");
         SELECT
             word,
@@ -58,9 +67,11 @@ RIPE_WORDS = """
             repeat_at <= CurrentUtcDatetime()
             AND
             repetition < $max_repetition
+            AND 
+            chat_id = $chat_id
         ORDER BY
-            chat_id,
-            word
+            repetition desc
+        LIMIT $limit
         ;
         """
 

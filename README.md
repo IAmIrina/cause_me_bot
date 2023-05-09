@@ -18,8 +18,8 @@ The database schemas will be created at the first "/start" command from any user
 - Telegram messager: set up your bot token in enviroments.
 
 # ENV example
-DICTIONARY_TOKEN=dict.1.1....c
-TELEGRAM_TOKEN=6275882280:AAH...c
-TRANSLATE_TOKEN=AQVNxffIMW-rE...G
-YDB_DATABASE=/ru-central1/b1g6251p1o0qlsnpmlq3/e...c
+- DICTIONARY_TOKEN=dict.1.1....c
+- TELEGRAM_TOKEN=6275882280:AAH...c
+- TRANSLATE_TOKEN=AQVNxffIMW-rE...G
+- YDB_DATABASE=/ru-central1/b1g6251p1o0qlsnpmlq3/e...c
 

@@ -17,9 +17,9 @@ The database schemas will be created at the first "/start" command from any user
 - Yandex Dictionary: you can get token here https://yandex.com/dev/dictionary/ and than set it  in enviroments.
 - Telegram messager: set up your bot token in enviroments.
 
-# ENV example
+## ENV example
 - DICTIONARY_TOKEN=dict.1.1....c
 - TELEGRAM_TOKEN=6275882280:AAH...c
 - TRANSLATE_TOKEN=AQVNxffIMW-rE...G
 - YDB_DATABASE=/ru-central1/b1g6251p1o0qlsnpmlq3/e...c
-
+- PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python

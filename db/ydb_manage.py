@@ -1,15 +1,32 @@
-# import ydb
-
 import os
+from functools import wraps
 from collections import namedtuple
 
 import ydb
 
-from db import ydb_queries
+from db import ydb_queries, database
+from config import settings
+
+
+def create_schema_decorator(func):
+    @wraps(func)
+    def inner(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except ydb.SchemeError:
+            with database.get_driver() as driver:
+                with ydb.SessionPool(driver) as pool:
+                    pool.retry_operation_sync(
+                        Schema.create_tables,
+                        path=settings.ydb.database,
+                    )
+            return func(self, *args, **kwargs)
+
+    return inner
 
 
 class Query():
-
+    @create_schema_decorator
     def add_user(self, session, chat_id: int, username: str) -> None:
         session.transaction().execute(
             session.prepare(ydb_queries.ADD_USER),
@@ -69,7 +86,6 @@ class Schema():
         Table(
             name='users',
             decription=ydb.TableDescription()
-            # .with_column(ydb.Column('user_id', ydb.PrimitiveType.Uint64, nullable=False))
             .with_column(ydb.Column('chat_id', ydb.PrimitiveType.Int64))
             .with_column(ydb.Column('username', ydb.OptionalType(ydb.PrimitiveType.Utf8)))
             .with_column(ydb.Column('created_at', ydb.OptionalType(ydb.PrimitiveType.Datetime)))

@@ -30,12 +30,12 @@ class API():
             raise err
 
     def delete_keyboard(self, chat_id, message_id):
-        delete_keyboard = {'remove_inline_keyboard': True}
-        response = requests.get(
-            f"{self.telegram_url}/editMessageReplyMarkup?"
-            f"chat_id={chat_id}&message_id={message_id}&"
-            f"reply_markup={json.dumps(delete_keyboard)}"
-        )
+        params = {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "reply_markup": json.dumps({'remove_inline_keyboard': True})
+        }
+        response = requests.get(f"{self.telegram_url}/editMessageReplyMarkup?", params=params)
         try:
             response.raise_for_status()
         except Exception as err:

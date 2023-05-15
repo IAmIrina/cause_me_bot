@@ -3,7 +3,7 @@ import typing as t
 import urllib.parse
 
 from db import ydb_manage
-from lib import messages, telegram, schemas
+from lib import messages, telegram, schemas, storyteller
 
 
 logger = logging.getLogger(__name__)
@@ -11,10 +11,22 @@ logger = logging.getLogger(__name__)
 
 class WordReminder():
 
-    def __init__(self, pool, bot: telegram.API) -> None:
+    def __init__(self, pool, bot: telegram.API, text_generator: storyteller.ChatGPT) -> None:
         self.pool = pool
         self.db = ydb_manage.Query()
         self.bot = bot
+        self.text_generator = text_generator
+
+    def send_message(self, chat_id: int, text: str, keyboard: dict = None) -> None:
+        message = schemas.TLGResponse(
+            text=text,
+            reply_markup=keyboard,
+            parse_mode='MarkdownV2',
+        )
+        self.bot.send_message(
+            chat_id=chat_id,
+            **message.dict(exclude_none=True),
+        )
 
     def remind_to_repeat_words(self, intervals: t.List[int]) -> str:
         users = self.pool.retry_operation_sync(self.db.get_users)
@@ -41,22 +53,22 @@ class WordReminder():
                 continue
 
             for row in ripe_words:
+                examples = urllib.parse.quote(messages.YOUGLISH_URL.format(
+                    word=row.word), safe=':/').replace('.', '\\.')
+                keyboard = schemas.Keyboards.get_inline_keyboard(
+                    [
+                        schemas.Button(
+                            text=messages.REPEATED,
+                            callback_data=f'{schemas.Commands.REPEATED.value}{row.word}',
+                        )
+                    ],
+                )
+                message = schemas.TLGResponse(
+                    text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=row.word)}{examples}',
+                    reply_markup=keyboard,
+                    parse_mode='MarkdownV2',
+                )
                 try:
-                    examples = urllib.parse.quote(messages.YOUGLISH_URL.format(
-                        word=row.word), safe=':/').replace('.', '\\.')
-                    keyboard = schemas.Keyboards.get_inline_keyboard(
-                        [
-                            schemas.Button(
-                                text=messages.REPEATED,
-                                callback_data=f'{schemas.Commands.REPEATED.value}{row.word}',
-                            )
-                        ],
-                    )
-                    message = schemas.TLGResponse(
-                        text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=row.word)}{examples}',
-                        reply_markup=keyboard,
-                        parse_mode='MarkdownV2',
-                    )
                     self.bot.send_message(
                         chat_id=user.chat_id,
                         **message.dict(exclude_none=True),
@@ -75,3 +87,13 @@ class WordReminder():
                     repetition=row.repetition + 1,
                     repeat_after=intervals[row.repetition],
                 )
+            try:
+                story = self.text_generator.gen_story(ripe_words)
+            except Exception:
+                pass
+            else:
+                if story:
+                    self.bot.send_message(
+                        chat_id=user.chat_id,
+                        **schemas.TLGResponse(text=story).dict(exclude_none=True),
+                    )

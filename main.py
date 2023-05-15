@@ -9,7 +9,7 @@ import core.reminders as reminders
 from config import settings
 from core.handlers import MSGHandler
 from db import database
-from lib import telegram
+from lib import telegram, storyteller
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ def remind(*_):
             words = reminders.WordReminder(
                 pool,
                 telegram.API(settings.telegram.endpoint, settings.telegram.token),
+                storyteller.ChatGPT(**settings.chat_gpt.dict()),
             )
             words.remind_to_repeat_words(intervals=settings.intervals)
     return {

@@ -16,6 +16,7 @@ The database schemas will be created at the first "/start" command from any user
 - Yandex Translate: you need to get token for your service account and than set it in enviroments.
 - Yandex Dictionary: you can get token here https://yandex.com/dev/dictionary/ and than set it  in enviroments.
 - Telegram messager: set up your bot token in enviroments.
+- ChatGPT API: generation short texts with studing words. Using gpt-3.5-turb model because of good quality price ratio. You can get ChatGPT API token here https://platform.openai.com/account/api-keys.
 
 ## ENV example
 - DICTIONARY_TOKEN=dict.1.1....c
@@ -23,3 +24,4 @@ The database schemas will be created at the first "/start" command from any user
 - TRANSLATE_TOKEN=AQVNxffIMW-rE...G
 - YDB_DATABASE=/ru-central1/b1g6251p1o0qlsnpmlq3/e...c
 - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+- CHATGPT_TOKEN=sk-B...i

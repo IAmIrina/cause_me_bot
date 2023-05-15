@@ -80,15 +80,16 @@ class WordReminder():
                         row.chat_id,
                     )
                     continue
-                ripe_words = self.pool.retry_operation_sync(
+                self.pool.retry_operation_sync(
                     self.db.upsert_word,
                     chat_id=row.chat_id,
                     word=row.word,
                     repetition=row.repetition + 1,
                     repeat_after=intervals[row.repetition],
                 )
+
             try:
-                story = self.text_generator.gen_story(ripe_words)
+                story = self.text_generator.gen_story([row.word for row in ripe_words])
             except Exception:
                 pass
             else:

@@ -35,6 +35,14 @@ class Translate(EnvBaseSettings):
         env_prefix = 'translate_'
 
 
+class ChatGPT(EnvBaseSettings):
+    url: str = 'https://api.openai.com/v1/chat/completions'
+    token: str
+
+    class Config:
+        env_prefix = 'chatgpt_'
+
+
 class Telegram(EnvBaseSettings):
     endpoint: str = 'https://api.telegram.org'
     token: str
@@ -50,6 +58,7 @@ class Settings(EnvBaseSettings):
     telegram = Telegram()
     dictionary = Dictionary()
     translate = Translate()
+    chat_gpt = ChatGPT()
 
 
 settings = Settings()

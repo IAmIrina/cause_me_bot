@@ -19,22 +19,22 @@ The database schemas will be created at the first "/start" command from any user
 - ChatGPT API: generation short texts with studing words. Using gpt-3.5-turb model because of good quality price ratio. You can get ChatGPT API token here https://platform.openai.com/account/api-keys.
 
 ## Settings
-    Set all tokens  via env variables.
-    Set languages for your instance using env:
-    - YOUGLISH_LANGUAGE=english 
-    - YOUGLISH_ACCENT=us
-    You can get your languages and accents from youglish URL. For example, you have url https://youglish.com/pronounce/vrienden/dutch/nl, then you should take "ducth" as a language and "nl" as an accent.
+Set all tokens  via env variables.
+Set languages for your instance using env:
+- YOUGLISH_LANGUAGE=english 
+- YOUGLISH_ACCENT=us
+You can get your languages and accents from youglish URL. For example, you have url https://youglish.com/pronounce/vrienden/dutch/nl, then you should take "ducth" as a language and "nl" as an accent.
 
-    - TRANSLATE_SOURCE_LANGUAGE_CODE=en
-    - TRANSLATE_TARGET_LANGUAGE_CODE=ru
-    Language codes for the translate, Yandex Translate API is used now, so you can find possible values for your language in yandex translate API documentation https://cloud.yandex.com/en-ru/docs/translate/concepts/supported-languages.
-    - DICTIONARY_SOURCE_LANGUAGE_CODE=en
-    - DICTIONARY_TARGET_LANGUAGE_CODE=ru
-    Language codes for dictionary, you can find documentation here https://yandex.com/dev/dictionary.
+- TRANSLATE_SOURCE_LANGUAGE_CODE=en
+- TRANSLATE_TARGET_LANGUAGE_CODE=ru
+Language codes for the translate, Yandex Translate API is used now, so you can find possible values for your language in yandex translate API documentation https://cloud.yandex.com/en-ru/docs/translate/concepts/supported-languages.
+- DICTIONARY_SOURCE_LANGUAGE_CODE=en
+- DICTIONARY_TARGET_LANGUAGE_CODE=ru
+Language codes for dictionary, you can find documentation here https://yandex.com/dev/dictionary.
 
-    You can enable/disable creating text examples with env CHATGPT_ON (True or False).
+You can enable/disable creating text examples with env CHATGPT_ON (True or False).
     
-    You can enable/disable additional meanings  with env DICTIONARY_ON(True or False)
+You can enable/disable additional meanings  with env DICTIONARY_ON(True or False)
 
 ## ENV example
 - DICTIONARY_TOKEN=dict.1.1....c

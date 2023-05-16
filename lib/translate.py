@@ -10,16 +10,25 @@ logger = logging.getLogger(__name__)
 
 
 class YaTranslate():
-    def __init__(self, url, token) -> None:
+    def __init__(
+            self,
+            url: str,
+            token: str,
+            source_language_code: str,
+            target_language_code: str,
+    ) -> None:
         self.url = url
         self.headers = {
             'Authorization': f'Api-key {token}',
             'Content-Type': 'application/json'
         }
+        self.source_language_code = source_language_code
+        self.target_language_code = target_language_code
 
     def translate(self, text):
         payload = {
-            'targetLanguageCode': 'ru',
+            'sourceLanguageCode':  self.source_language_code,
+            'targetLanguageCode': self.target_language_code,
             'texts': [text],
         }
         try:
@@ -40,9 +49,16 @@ class YaDictionary():
         fr: int = 0
         pos: str = ''
 
-    def __init__(self, url, token) -> None:
+    def __init__(
+        self,
+        url: str,
+        token: str,
+        source_language_code: str,
+        target_language_code: str,
+    ) -> None:
         self.token = token
         self.url = url
+        self.direction = f'{source_language_code}-{target_language_code}'
 
     def get_translates(self, text) -> str:
         meanings = self._get_from_dictionary(text)
@@ -51,7 +67,7 @@ class YaDictionary():
     def _get_from_dictionary(self, text: str) -> t.List[Translate]:
         params = {
             "key": self.token,
-            "lang": "en-ru",
+            "lang": self.direction,
             "text": text,
             "flags": "4"
         }

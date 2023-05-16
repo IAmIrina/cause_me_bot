@@ -83,12 +83,13 @@ class MSGHandler():
         return schemas.TLGResponse(text=messages.HELP)
 
     def translate_new_word(self, word: str) -> schemas.TLGResponse:
-        dictionary = translate.YaDictionary(**dict(self.dictionary)).get_translates(word)
+        dictionary = translate.YaDictionary(
+            **dict(self.dictionary)).get_translates(word) if config.settings.dictionary_on else ''
         meaning = translate.YaTranslate(**dict(self.translator)).translate(word)
         keyboard = schemas.Keyboards.get_inline_keyboard(
             [
                 schemas.Button(text=messages.ADD_WORD.format(word), callback_data=f'{schemas.Commands.ADD.value}{word}')
             ],
         )
-        examples = urllib.parse.quote(messages.YOUGLISH_URL.format(word=word), safe=':/')
+        examples = urllib.parse.quote(config.settings.youglish.url_template.format(word=word), safe=':/')
         return schemas.TLGResponse(text='\n\n'.join([meaning, dictionary, examples]), reply_markup=keyboard)

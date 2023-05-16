@@ -7,5 +7,4 @@ HELP = """
 Just send a word to add the word to your vocabulary.
 """
 TIME_TO_REPEAT_WORDS = "It's time to repeat the words"
-YOUGLISH_URL = 'https://youglish.com/pronounce/{word}/english/us'
 REPEAR_WORD_TEMPLATE = '*{word}*\n'

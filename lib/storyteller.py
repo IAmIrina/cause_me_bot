@@ -4,10 +4,12 @@ import typing as t
 
 import requests
 
+from config import settings
+
 logger = logging.getLogger(__name__)
 
 TEMPERATURE = 0.7
-PROMP = "Make story (length about {length} words) with: {words}."
+PROMP = "Make story in " + settings.youglish.language + "(length about {length} words) with: {words}."
 WORDS_FOR_TOKEN = 13
 
 

@@ -5,13 +5,19 @@ import urllib.parse
 from db import ydb_manage
 from lib import messages, telegram, schemas, storyteller
 
+from config import settings
 
 logger = logging.getLogger(__name__)
 
 
 class WordReminder():
 
-    def __init__(self, pool, bot: telegram.API, text_generator: storyteller.ChatGPT) -> None:
+    def __init__(
+            self,
+            pool,
+            bot: telegram.API,
+            text_generator: storyteller.ChatGPT,
+    ) -> None:
         self.pool = pool
         self.db = ydb_manage.Query()
         self.bot = bot
@@ -27,6 +33,18 @@ class WordReminder():
             chat_id=chat_id,
             **message.dict(exclude_none=True),
         )
+
+    def send_story(self, chat_id, words):
+        try:
+            story = self.text_generator.gen_story(words)
+        except Exception:
+            pass
+        else:
+            if story:
+                self.bot.send_message(
+                    chat_id=chat_id,
+                    **schemas.TLGResponse(text=story).dict(exclude_none=True),
+                )
 
     def remind_to_repeat_words(self, intervals: t.List[int]) -> str:
         users = self.pool.retry_operation_sync(self.db.get_users)
@@ -53,7 +71,7 @@ class WordReminder():
                 continue
 
             for row in ripe_words:
-                examples = urllib.parse.quote(messages.YOUGLISH_URL.format(
+                examples = urllib.parse.quote(settings.youglish.url_template.format(
                     word=row.word), safe=':/').replace('.', '\\.')
                 keyboard = schemas.Keyboards.get_inline_keyboard(
                     [
@@ -88,13 +106,5 @@ class WordReminder():
                     repeat_after=intervals[row.repetition],
                 )
 
-            try:
-                story = self.text_generator.gen_story([row.word for row in ripe_words])
-            except Exception:
-                pass
-            else:
-                if story:
-                    self.bot.send_message(
-                        chat_id=user.chat_id,
-                        **schemas.TLGResponse(text=story).dict(exclude_none=True),
-                    )
+            if settings.chatgpt_on:
+                self.send_story(user.chat_id, [row.word for row in ripe_words])

@@ -34,6 +34,11 @@ def process_event(event, _) -> dict:
                 ),
                 settings.dictionary,
                 settings.translate,
+                reminders.WordReminder(
+                    pool,
+                    telegram.API(settings.telegram.endpoint, settings.telegram.token),
+                    storyteller.ChatGPT(**settings.chat_gpt.dict()),
+                )
             ).process(body)
     return {
         'statusCode': HTTPStatus.OK,
@@ -48,7 +53,7 @@ def remind(*_):
                 telegram.API(settings.telegram.endpoint, settings.telegram.token),
                 storyteller.ChatGPT(**settings.chat_gpt.dict()),
             )
-            words.remind_to_repeat_words(intervals=settings.intervals)
+            words.remind_to_repeat_words()
     return {
         'statusCode': HTTPStatus.OK,
     }

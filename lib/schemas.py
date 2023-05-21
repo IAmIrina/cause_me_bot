@@ -49,6 +49,8 @@ class Commands(Enum):
     START = '/start'
     HELP = '/help'
     REPEATED = '/repeated'
+    MORE = '/more'
+    REGISTER_COMMANDS = '/register'
 
 
 class Keyboards():

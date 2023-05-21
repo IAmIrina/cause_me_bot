@@ -1,5 +1,4 @@
 import logging
-import typing as t
 import urllib.parse
 
 from db import ydb_manage
@@ -22,89 +21,106 @@ class WordReminder():
         self.db = ydb_manage.Query()
         self.bot = bot
         self.text_generator = text_generator
+        self.intervals = settings.intervals
 
-    def send_message(self, chat_id: int, text: str, keyboard: dict = None) -> None:
+    def _send_message(self, chat_id: int, **kwargs) -> None:
+        """Send message to messager."""
+        try:
+            self.bot.send_message(
+                chat_id=chat_id,
+                **kwargs,
+            )
+        except Exception as err:
+            logger.exception('Can not send telegram message %s to chat %s', kwargs, chat_id)
+            raise err
+
+    def _send_story(self, chat_id, words):
+        try:
+            story = self.text_generator.gen_story(words)
+            if story:
+                self._send_message(
+                    chat_id=chat_id,
+                    text=story,
+                )
+        except Exception:
+            pass
+
+    def _send_word(self, chat_id: int, word: str):
+        examples = urllib.parse.quote(settings.youglish.url_template.format(
+            word=word), safe=':/').replace('.', '\\.')
+        keyboard = schemas.Keyboards.get_inline_keyboard(
+            [
+                schemas.Button(
+                    text=messages.REPEATED,
+                    callback_data=f'{schemas.Commands.REPEATED.value}{word}',
+                )
+            ],
+        )
         message = schemas.TLGResponse(
-            text=text,
+            text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=word)}{examples}',
             reply_markup=keyboard,
             parse_mode='MarkdownV2',
         )
-        self.bot.send_message(
-            chat_id=chat_id,
-            **message.dict(exclude_none=True),
-        )
-
-    def send_story(self, chat_id, words):
         try:
-            story = self.text_generator.gen_story(words)
+            self._send_message(
+                chat_id=chat_id,
+                **message.dict(exclude_none=True),
+            )
         except Exception:
             pass
-        else:
-            if story:
-                self.bot.send_message(
-                    chat_id=chat_id,
-                    **schemas.TLGResponse(text=story).dict(exclude_none=True),
-                )
 
-    def remind_to_repeat_words(self, intervals: t.List[int]) -> str:
+    def _load_ripe_words(self, chat_id: int):
+        ripe_words = self.pool.retry_operation_sync(
+            self.db.get_ripe_words,
+            max_repetition=len(self.intervals),
+            chat_id=chat_id,
+        )
+        return ripe_words
+
+    def _send_words_to_user(self, chat_id: int, words) -> None:
+        for row in words:
+            try:
+                self._send_word(chat_id=chat_id, word=row.word)
+            except Exception as err:
+                logger.exception(
+                    'Can not send telegram message %s to chat %s',
+                    messages.REPEAR_WORD_TEMPLATE.format(word=row.word),
+                    chat_id,
+                )
+                raise err
+            self.pool.retry_operation_sync(
+                self.db.upsert_word,
+                chat_id=chat_id,
+                word=row.word,
+                repetition=row.repetition + 1,
+                repeat_after=self.intervals[row.repetition],
+            )
+
+            if settings.chatgpt_on:
+                self._send_story(chat_id, [row.word for row in words])
+
+    def send_ripe_words_to_user(self, chat_id: int):
+        ripe_words = self._load_ripe_words(chat_id=chat_id)
+        if not ripe_words:
+            self._send_message(
+                chat_id=chat_id,
+                text=messages.NOTHING_TO_REPEAT,
+            )
+            return
+        self._send_words_to_user(chat_id, ripe_words)
+
+    def remind_to_repeat_words(self) -> str:
         users = self.pool.retry_operation_sync(self.db.get_users)
 
         for user in users:
-            ripe_words = self.pool.retry_operation_sync(
-                self.db.get_ripe_words,
-                max_repetition=len(intervals),
-                chat_id=user.chat_id,
-            )
+            ripe_words = self._load_ripe_words(chat_id=user.chat_id)
             if not ripe_words:
-                continue
+                return
             try:
-                self.bot.send_message(
-                    text=messages.TIME_TO_REPEAT_WORDS,
+                self._send_message(
                     chat_id=user.chat_id,
+                    text=messages.TIME_TO_REPEAT_WORDS,
                 )
+                self._send_words_to_user(user.chat_id, ripe_words)
             except Exception:
-                logger.exception(
-                    'Can not send telegram message %s to chat %s',
-                    messages.TIME_TO_REPEAT_WORDS,
-                    user.chat_id,
-                )
-                continue
-
-            for row in ripe_words:
-                examples = urllib.parse.quote(settings.youglish.url_template.format(
-                    word=row.word), safe=':/').replace('.', '\\.')
-                keyboard = schemas.Keyboards.get_inline_keyboard(
-                    [
-                        schemas.Button(
-                            text=messages.REPEATED,
-                            callback_data=f'{schemas.Commands.REPEATED.value}{row.word}',
-                        )
-                    ],
-                )
-                message = schemas.TLGResponse(
-                    text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=row.word)}{examples}',
-                    reply_markup=keyboard,
-                    parse_mode='MarkdownV2',
-                )
-                try:
-                    self.bot.send_message(
-                        chat_id=user.chat_id,
-                        **message.dict(exclude_none=True),
-                    )
-                except Exception:
-                    logger.exception(
-                        'Can not send telegram message %s to chat %s',
-                        messages.REPEAR_WORD_TEMPLATE.format(word=row.word),
-                        row.chat_id,
-                    )
-                    continue
-                self.pool.retry_operation_sync(
-                    self.db.upsert_word,
-                    chat_id=row.chat_id,
-                    word=row.word,
-                    repetition=row.repetition + 1,
-                    repeat_after=intervals[row.repetition],
-                )
-
-            if settings.chatgpt_on:
-                self.send_story(user.chat_id, [row.word for row in ripe_words])
+                pass

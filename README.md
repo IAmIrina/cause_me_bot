@@ -54,3 +54,14 @@ The database schemas will be created at the first "/start" command from any user
 
 - YOUGLISH_LANGUAGE=english
 - YOUGLISH_ACCENT=us
+
+## Manual
+Telegram user commands:
+- /start: start telegram bot, create data base schema if it doesn't exist and add user to table users
+- /help: send user a text constant from messages.HELP
+- /more: send user word that the user should repeat
+When a user starts the bot and then sends message, he gets translate of the word or phrase and a button ADD. If he presses the button ADD, the word is added to the list of his words.
+
+Telegram admin commands:
+- /register: set telegram user commands using setMyCommands API endpoint. Telegam suggests the command to user when user put "/" into the message field and e.i.
+

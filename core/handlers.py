@@ -2,6 +2,7 @@ import logging
 import urllib
 
 import config
+from core import reminders
 from db import ydb_manage
 from lib import messages, schemas, telegram, translate
 
@@ -16,12 +17,14 @@ class MSGHandler():
             bot: telegram.API,
             dictionary: config.Dictionary,
             translator: config.Translate,
+            reminder: reminders.WordReminder,
     ) -> None:
         self.pool = pool
         self.bot = bot
         self.db = ydb_manage.Query()
         self.dictionary = dictionary
         self.translator = translator
+        self.reminder = reminder
 
     def process(self, body: dict) -> None:
         callback = body.get('callback_query')
@@ -58,14 +61,24 @@ class MSGHandler():
                     chat_id=message.from_.id,
                     word=message[len(schemas.Commands.DELETE.value):],
                 )
+            elif message.text == schemas.Commands.MORE.value:
+                self.reminder.send_ripe_words_to_user(chat_id=message.from_.id)
+                response = None
+            elif message.text == schemas.Commands.REGISTER_COMMANDS.value:
+                response = self.set_my_commands()
             else:
                 response = self.translate_new_word(
                     word=message.text.strip(),
                 )
-            self.bot.send_message(
-                chat_id=message.from_.id,
-                **response.dict(exclude_none=True),
-            )
+            if response:
+                self.bot.send_message(
+                    chat_id=message.from_.id,
+                    **response.dict(exclude_none=True),
+                )
+
+    def set_my_commands(self) -> schemas.TLGResponse:
+        self.bot.set_my_commands()
+        return schemas.TLGResponse(text=messages.COMMANDS_SET)
 
     def add_word(self, chat_id: int, word: str) -> schemas.TLGResponse:
         self.pool.retry_operation_sync(self.db.add_word, chat_id=chat_id, word=word)

@@ -12,10 +12,6 @@ class API():
     COMMANDS = {
         "commands": [
             {
-                "command": "start",
-                "description": "Start using bot"
-            },
-            {
                 "command": "help",
                 "description": "Display help"
             },

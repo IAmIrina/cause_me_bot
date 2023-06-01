@@ -43,7 +43,7 @@ UPSERT_WORD = """
 DELETE_WORD = """
         DECLARE $chat_id AS Int64;
         DECLARE $word AS Utf8;
-        DELETE FROM words WHERE chat_id = $chat_id and word = $word;
+        DELETE FROM words WHERE chat_id = $chat_id and word ILIKE $word;
         """
 GET_USERS = """
         SELECT
@@ -89,3 +89,18 @@ ADD_USER = """
         CurrentUtcDatetime()
     );
     """
+
+GET_WORD = """
+        DECLARE $chat_id AS Int64;
+        DECLARE $word AS Utf8;
+        SELECT
+            word,
+            chat_id,
+            repetition,
+        FROM words
+        WHERE
+            word ILIKE $word
+            AND
+            chat_id = $chat_id
+        ;
+        """

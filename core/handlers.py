@@ -35,6 +35,11 @@ class MSGHandler():
                     chat_id=callback.message.chat.id,
                     word=callback.data[len(schemas.Commands.ADD.value):],
                 )
+            elif callback.data.startswith(schemas.Commands.DELETE.value):
+                response = self.delete_word(
+                    chat_id=callback.message.chat.id,
+                    word=callback.data[len(schemas.Commands.DELETE.value):],
+                )
             self.bot.delete_keyboard(
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
@@ -56,18 +61,14 @@ class MSGHandler():
                 )
             elif message.text == schemas.Commands.HELP.value:
                 response = self.info()
-            elif message.text.startswith(schemas.Commands.DELETE.value):
-                response = self.delete_word(
-                    chat_id=message.from_.id,
-                    word=message[len(schemas.Commands.DELETE.value):],
-                )
             elif message.text == schemas.Commands.MORE.value:
                 self.reminder.send_ripe_words_to_user(chat_id=message.from_.id)
                 response = None
             elif message.text == schemas.Commands.REGISTER_COMMANDS.value:
                 response = self.set_my_commands()
             else:
-                response = self.translate_new_word(
+                response = self.process_new_word(
+                    chat_id=message.from_.id,
                     word=message.text.strip(),
                 )
             if response:
@@ -90,19 +91,32 @@ class MSGHandler():
 
     def add_user(self, chat_id: int, username: str) -> schemas.TLGResponse:
         self.pool.retry_operation_sync(self.db.add_user, chat_id=chat_id, username=username)
-        return schemas.TLGResponse(text=messages.USER_ADDED)
+        return schemas.TLGResponse(text=f"{messages.USER_ADDED}\n{messages.HELP}")
 
     def info(self) -> schemas.TLGResponse:
         return schemas.TLGResponse(text=messages.HELP)
 
-    def translate_new_word(self, word: str) -> schemas.TLGResponse:
+    def process_new_word(self, chat_id: int, word: str) -> schemas.TLGResponse:
+        dictionary, meaning = self._translate_word(word=word)
+        examples = urllib.parse.quote(config.settings.youglish.url_template.format(word=word), safe=':/')
+        if len(self.pool.retry_operation_sync(self.db.get_word, chat_id=chat_id, word=word)):
+            keyboard = schemas.Keyboards.get_inline_keyboard(
+                [
+                    schemas.Button(text=messages.DELETE_WORD.format(word),
+                                   callback_data=f'{schemas.Commands.DELETE.value}{word}')
+                ],
+            )
+        else:
+            keyboard = schemas.Keyboards.get_inline_keyboard(
+                [
+                    schemas.Button(text=messages.ADD_WORD.format(word),
+                                   callback_data=f'{schemas.Commands.ADD.value}{word}')
+                ],
+            )
+        return schemas.TLGResponse(text='\n\n'.join([meaning, dictionary, examples]), reply_markup=keyboard)
+
+    def _translate_word(self, word: str) -> schemas.TLGResponse:
         dictionary = translate.YaDictionary(
             **dict(self.dictionary)).get_translates(word) if config.settings.dictionary_on else ''
         meaning = translate.YaTranslate(**dict(self.translator)).translate(word)
-        keyboard = schemas.Keyboards.get_inline_keyboard(
-            [
-                schemas.Button(text=messages.ADD_WORD.format(word), callback_data=f'{schemas.Commands.ADD.value}{word}')
-            ],
-        )
-        examples = urllib.parse.quote(config.settings.youglish.url_template.format(word=word), safe=':/')
-        return schemas.TLGResponse(text='\n\n'.join([meaning, dictionary, examples]), reply_markup=keyboard)
+        return dictionary, meaning

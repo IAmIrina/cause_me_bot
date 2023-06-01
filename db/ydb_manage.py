@@ -47,6 +47,17 @@ class Query():
             commit_tx=True,
         )
 
+    def get_word(self, session, chat_id, word) -> None:
+        result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
+            session.prepare(ydb_queries.GET_WORD),
+            {
+                '$chat_id': chat_id,
+                '$word': word,
+            },
+            commit_tx=True,
+        )
+        return result_sets[0].rows
+
     def upsert_word(self, session, chat_id: int, word: str, repetition: int = 0, repeat_after: int = 1) -> None:
         session.transaction().execute(
             session.prepare(ydb_queries.UPSERT_WORD),

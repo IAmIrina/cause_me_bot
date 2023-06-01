@@ -96,8 +96,8 @@ class WordReminder():
                 repeat_after=self.intervals[row.repetition],
             )
 
-            if settings.chatgpt_on:
-                self._send_story(chat_id, [row.word for row in words])
+        if words and settings.chatgpt_on:
+            self._send_story(chat_id, [row.word for row in words])
 
     def send_ripe_words_to_user(self, chat_id: int):
         ripe_words = self._load_ripe_words(chat_id=chat_id)

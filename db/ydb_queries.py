@@ -89,3 +89,18 @@ ADD_USER = """
         CurrentUtcDatetime()
     );
     """
+
+GET_WORD = """
+        DECLARE $chat_id AS Int64;
+        DECLARE $word AS Utf8;
+        SELECT
+            word,
+            chat_id,
+            repetition,
+        FROM words
+        WHERE
+            word = $word
+            AND
+            chat_id = $chat_id
+        ;
+        """

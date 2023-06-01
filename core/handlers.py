@@ -69,7 +69,7 @@ class MSGHandler():
             else:
                 response = self.process_new_word(
                     chat_id=message.from_.id,
-                    word=message.text.strip().lower(),
+                    word=message.text.strip(),
                 )
             if response:
                 self.bot.send_message(

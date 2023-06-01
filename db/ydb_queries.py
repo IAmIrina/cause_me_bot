@@ -43,7 +43,7 @@ UPSERT_WORD = """
 DELETE_WORD = """
         DECLARE $chat_id AS Int64;
         DECLARE $word AS Utf8;
-        DELETE FROM words WHERE chat_id = $chat_id and word = $word;
+        DELETE FROM words WHERE chat_id = $chat_id and word ILIKE $word;
         """
 GET_USERS = """
         SELECT
@@ -99,7 +99,7 @@ GET_WORD = """
             repetition,
         FROM words
         WHERE
-            word = $word
+            word ILIKE $word
             AND
             chat_id = $chat_id
         ;

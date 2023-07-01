@@ -4,7 +4,7 @@ import urllib
 import config
 from core import reminders
 from db import ydb_manage
-from lib import messages, schemas, telegram, translate
+from lib import messages, schemas, telegram, translate, storyteller
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ class MSGHandler():
             dictionary: config.Dictionary,
             translator: config.Translate,
             reminder: reminders.WordReminder,
+            text_generator: storyteller.ChatGPT,
     ) -> None:
         self.pool = pool
         self.bot = bot
@@ -25,6 +26,7 @@ class MSGHandler():
         self.dictionary = dictionary
         self.translator = translator
         self.reminder = reminder
+        self.text_generator = text_generator
 
     def process(self, body: dict) -> None:
         callback = body.get('callback_query')
@@ -113,7 +115,11 @@ class MSGHandler():
                                    callback_data=f'{schemas.Commands.ADD.value}{word}')
                 ],
             )
-        return schemas.TLGResponse(text='\n\n'.join([meaning, dictionary, examples]), reply_markup=keyboard)
+        example_sentence = self.text_generator.gen_sentence(word)
+        return schemas.TLGResponse(
+            text='\n\n'.join([meaning, dictionary, example_sentence, examples]),
+            reply_markup=keyboard
+        )
 
     def _translate_word(self, word: str) -> schemas.TLGResponse:
         dictionary = translate.YaDictionary(

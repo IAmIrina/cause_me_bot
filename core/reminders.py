@@ -48,6 +48,7 @@ class WordReminder():
     def _send_word(self, chat_id: int, word: str):
         examples = urllib.parse.quote(settings.youglish.url_template.format(
             word=word), safe=':/').replace('.', '\\.')
+        example_sentence = self.text_generator.gen_sentence(word)
         keyboard = schemas.Keyboards.get_inline_keyboard(
             [
                 schemas.Button(
@@ -57,7 +58,7 @@ class WordReminder():
             ],
         )
         message = schemas.TLGResponse(
-            text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=word)}{examples}',
+            text=f'{messages.REPEAR_WORD_TEMPLATE.format(word=word)}{example_sentence}{examples}',
             reply_markup=keyboard,
             parse_mode='MarkdownV2',
         )

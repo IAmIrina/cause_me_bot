@@ -26,6 +26,7 @@ def process_event(event, _) -> dict:
     logger.debug(body)
     with database.get_driver() as driver:
         with ydb.SessionPool(driver) as pool:
+            chatgpt = storyteller.ChatGPT(**settings.chat_gpt.dict())
             MSGHandler(
                 pool,
                 telegram.API(
@@ -37,8 +38,9 @@ def process_event(event, _) -> dict:
                 reminders.WordReminder(
                     pool,
                     telegram.API(settings.telegram.endpoint, settings.telegram.token),
-                    storyteller.ChatGPT(**settings.chat_gpt.dict()),
-                )
+                    chatgpt,
+                ),
+                chatgpt
             ).process(body)
     return {
         'statusCode': HTTPStatus.OK,

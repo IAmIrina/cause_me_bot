@@ -115,9 +115,17 @@ class MSGHandler():
                                    callback_data=f'{schemas.Commands.ADD.value}{word}')
                 ],
             )
-        example_sentence = self.text_generator.gen_sentence(word)
+        try:
+            example_sentence = self.text_generator.gen_sentence(token=word)
+        except Exception:
+            example_sentence = ''
+        text = '\n\n'.join([meaning, dictionary])
+        if example_sentence:
+            text += '\n\n' + example_sentence
+        if examples:
+            text += '\n\n' + examples
         return schemas.TLGResponse(
-            text='\n\n'.join([meaning, dictionary, example_sentence, examples]),
+            text=text,
             reply_markup=keyboard
         )
 

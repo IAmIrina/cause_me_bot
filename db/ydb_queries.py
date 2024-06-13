@@ -104,3 +104,19 @@ GET_WORD = """
             chat_id = $chat_id
         ;
         """
+
+GET_COUNT_RIPE_WORDS = """
+        DECLARE $max_repetition AS Int64;
+        DECLARE $chat_id AS Int64;
+        $format = DateTime::Format("%Y-%m-%d");
+        SELECT
+            count(word) as words
+        FROM words
+        WHERE
+            repeat_at <= CurrentUtcDatetime()
+            AND
+            repetition < $max_repetition
+            AND 
+            chat_id = $chat_id
+        ;
+        """

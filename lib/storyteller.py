@@ -54,9 +54,9 @@ class ChatGPT():
             return choice.get('message', {}).get('content')
 
     def gen_story(self, tokens: t.List[str]) -> str:
-        payload = self._get_filled_payload(prompt=messages.GEN_STORY_PROMPT, tokens=tokens)
+        payload = self._get_filled_payload(prompt_template=messages.GEN_STORY_PROMPT, tokens=tokens)
         return self._generate(payload=payload)
 
     def gen_sentence(self, token: str) -> str:
-        payload = self._get_filled_payload(prompt=messages.GEN_SENTENCE_PROMPT, tokens=token)
+        payload = self._get_filled_payload(prompt_template=messages.GEN_SENTENCE_PROMPT, tokens=[token])
         return self._generate(payload=payload)

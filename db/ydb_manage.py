@@ -100,6 +100,17 @@ class Query():
         )
         return result_sets[0].rows
 
+    def get_count_ripe_words(self, session, chat_id: int, max_repetition: int):
+        result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
+            session.prepare(ydb_queries.GET_COUNT_RIPE_WORDS),
+            {
+                '$max_repetition': max_repetition,
+                '$chat_id': chat_id,
+            },
+            commit_tx=True,
+        )
+        return result_sets[0].rows
+
 
 class Schema():
     Table = namedtuple('Table', ['name', 'decription'])

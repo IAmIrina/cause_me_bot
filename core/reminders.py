@@ -31,7 +31,8 @@ class WordReminder():
                 **kwargs,
             )
         except Exception as err:
-            logger.exception('Can not send telegram message %s to chat %s', kwargs, chat_id)
+            logger.exception(
+                'Can not send telegram message %s to chat %s', kwargs, chat_id)
             raise err
 
     def _send_story(self, chat_id, words):
@@ -48,7 +49,10 @@ class WordReminder():
     def _send_word(self, chat_id: int, word: str):
         examples = urllib.parse.quote(settings.youglish.url_template.format(
             word=word), safe=':/').replace('.', '\\.')
-        example_sentence = self.text_generator.gen_sentence(word)
+        try:
+            example_sentence = self.text_generator.gen_sentence(word)
+        except Exception:
+            example_sentence = ''
         keyboard = schemas.Keyboards.get_inline_keyboard(
             [
                 schemas.Button(
@@ -77,6 +81,14 @@ class WordReminder():
             chat_id=chat_id,
         )
         return ripe_words
+
+    def _load_count_ripe_words(self, chat_id: int):
+        count_ripe_words = self.pool.retry_operation_sync(
+            self.db.get_count_ripe_words,
+            max_repetition=len(self.intervals),
+            chat_id=chat_id,
+        )
+        return count_ripe_words[0].words
 
     def _send_words_to_user(self, chat_id: int, words) -> None:
         for row in words:
@@ -109,6 +121,11 @@ class WordReminder():
             )
             return
         self._send_words_to_user(chat_id, ripe_words)
+        self._send_message(
+            chat_id=chat_id,
+            text=messages.WORDS_LEFT.format(
+                count_of_words=self._load_count_ripe_words(chat_id=chat_id))
+        )
 
     def remind_to_repeat_words(self) -> str:
         users = self.pool.retry_operation_sync(self.db.get_users)
@@ -116,12 +133,17 @@ class WordReminder():
         for user in users:
             ripe_words = self._load_ripe_words(chat_id=user.chat_id)
             if not ripe_words:
-                return
+                continue
             try:
                 self._send_message(
                     chat_id=user.chat_id,
                     text=messages.TIME_TO_REPEAT_WORDS,
                 )
                 self._send_words_to_user(user.chat_id, ripe_words)
+                self._send_message(
+                    chat_id=user.chat_id,
+                    text=messages.WORDS_LEFT.format(
+                        count_of_words=self._load_count_ripe_words(chat_id=user.chat_id))
+                )
             except Exception:
                 pass

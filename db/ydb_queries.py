@@ -105,7 +105,7 @@ GET_WORD = """
         ;
         """
 
-GET_COUNT_RIPE_WORDS = """
+GET_REPEAT_WORDS_COUNT = """
         DECLARE $max_repetition AS Int64;
         DECLARE $chat_id AS Int64;
         $format = DateTime::Format("%Y-%m-%d");
@@ -116,6 +116,48 @@ GET_COUNT_RIPE_WORDS = """
             repeat_at <= CurrentUtcDatetime()
             AND
             repetition < $max_repetition
+            AND 
+            repetition > 0
+            AND
+            chat_id = $chat_id
+        ;
+        """
+
+GET_LEARNED_WORDS_COUNT = """
+        DECLARE $max_repetition AS Int64;
+        DECLARE $chat_id AS Int64;
+        SELECT
+            count(word) as words
+        FROM words
+        WHERE
+            repetition >= $max_repetition
+            AND 
+            chat_id = $chat_id
+        ;
+        """
+
+GET_IN_PROGRESS_COUNT = """
+        DECLARE $max_repetition AS Int64;
+        DECLARE $chat_id AS Int64;
+        SELECT
+            count(word) as words
+        FROM words
+        WHERE
+            repetition < $max_repetition
+            AND
+            repetition > 0
+            AND 
+            chat_id = $chat_id
+        ;
+        """
+
+GET_NEW_WORDS_COUNT = """
+        DECLARE $chat_id AS Int64;
+        SELECT
+            count(word) as words
+        FROM words
+        WHERE
+            repetition = 0
             AND 
             chat_id = $chat_id
         ;

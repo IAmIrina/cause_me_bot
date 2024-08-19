@@ -82,13 +82,20 @@ class WordReminder():
         )
         return ripe_words
 
-    def _load_count_ripe_words(self, chat_id: int):
+    def _load_repeat_words_count(self, chat_id: int):
         count_ripe_words = self.pool.retry_operation_sync(
-            self.db.get_count_ripe_words,
+            self.db.get_repeat_words_count,
             max_repetition=len(self.intervals),
             chat_id=chat_id,
         )
         return count_ripe_words[0].words
+
+    def _load_new_words_count(self, chat_id: int):
+        count_new_words = self.pool.retry_operation_sync(
+            self.db.get_new_words_count,
+            chat_id=chat_id,
+        )
+        return count_new_words[0].words
 
     def _send_words_to_user(self, chat_id: int, words) -> None:
         for row in words:
@@ -124,7 +131,9 @@ class WordReminder():
         self._send_message(
             chat_id=chat_id,
             text=messages.WORDS_LEFT.format(
-                count_of_words=self._load_count_ripe_words(chat_id=chat_id))
+                repeat_words_count=self._load_repeat_words_count(chat_id=chat_id),
+                new_words_count=self._load_new_words_count(chat_id=chat_id),
+            ),
         )
 
     def remind_to_repeat_words(self) -> str:
@@ -143,7 +152,9 @@ class WordReminder():
                 self._send_message(
                     chat_id=user.chat_id,
                     text=messages.WORDS_LEFT.format(
-                        count_of_words=self._load_count_ripe_words(chat_id=user.chat_id))
+                        repeat_words_count=self._load_repeat_words_count(chat_id=user.chat_id),
+                        new_words_count=self._load_new_words_count(chat_id=user.chat_id),
+                    ),
                 )
             except Exception:
                 pass

@@ -27,6 +27,7 @@ class MSGHandler():
         self.translator = translator
         self.reminder = reminder
         self.text_generator = text_generator
+        self.intervals = config.settings.intervals
 
     def process(self, body: dict) -> None:
         callback = body.get('callback_query')
@@ -62,7 +63,9 @@ class MSGHandler():
                     username=username,
                 )
             elif message.text == schemas.Commands.HELP.value:
-                response = self.info()
+                response = self.help()
+            elif message.text == schemas.Commands.STATISTICS.value:
+                response = self.statistics(chat_id=message.from_.id)
             elif message.text == schemas.Commands.MORE.value:
                 self.reminder.send_ripe_words_to_user(chat_id=message.from_.id)
                 response = None
@@ -95,7 +98,23 @@ class MSGHandler():
         self.pool.retry_operation_sync(self.db.add_user, chat_id=chat_id, username=username)
         return schemas.TLGResponse(text=f"{messages.USER_ADDED}\n{messages.HELP}")
 
-    def info(self) -> schemas.TLGResponse:
+    def statistics(self, chat_id: int) -> schemas.TLGResponse:
+        learned_count = self.pool.retry_operation_sync(
+            self.db.get_learned_words_count, chat_id=chat_id, max_repetition=len(self.intervals))
+        in_progress_count = self.pool.retry_operation_sync(
+            self.db.get_in_progress_count, chat_id=chat_id, max_repetition=len(self.intervals))
+        repeat_words_count = self.pool.retry_operation_sync(
+            self.db.get_repeat_words_count, chat_id=chat_id, max_repetition=len(self.intervals))
+        new_words_count = self.pool.retry_operation_sync(self.db.get_new_words_count, chat_id=chat_id)
+        return schemas.TLGResponse(text=messages.STATISTICS.format(
+            learned_count=learned_count[0].words,
+            in_progress_count=in_progress_count[0].words,
+            repeat_words_count=repeat_words_count[0].words,
+            new_words_count=new_words_count[0].words
+        )
+        )
+
+    def help(self) -> schemas.TLGResponse:
         return schemas.TLGResponse(text=messages.HELP)
 
     def process_new_word(self, chat_id: int, word: str) -> schemas.TLGResponse:

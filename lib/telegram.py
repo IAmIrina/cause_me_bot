@@ -16,6 +16,10 @@ class API():
                 "description": "Display help"
             },
             {
+                "command": "statistics",
+                "description": "Statistics"
+            },
+            {
                 "command": "more",
                 "description": "Get more words to repeat"
             }

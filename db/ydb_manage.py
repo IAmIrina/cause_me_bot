@@ -100,11 +100,43 @@ class Query():
         )
         return result_sets[0].rows
 
-    def get_count_ripe_words(self, session, chat_id: int, max_repetition: int):
+    def get_repeat_words_count(self, session, chat_id: int, max_repetition: int):
         result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
-            session.prepare(ydb_queries.GET_COUNT_RIPE_WORDS),
+            session.prepare(ydb_queries.GET_REPEAT_WORDS_COUNT),
             {
                 '$max_repetition': max_repetition,
+                '$chat_id': chat_id,
+            },
+            commit_tx=True,
+        )
+        return result_sets[0].rows
+
+    def get_in_progress_count(self, session, chat_id: int, max_repetition: int):
+        result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
+            session.prepare(ydb_queries.GET_IN_PROGRESS_COUNT),
+            {
+                '$max_repetition': max_repetition,
+                '$chat_id': chat_id,
+            },
+            commit_tx=True,
+        )
+        return result_sets[0].rows
+
+    def get_learned_words_count(self, session, chat_id: int, max_repetition: int):
+        result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
+            session.prepare(ydb_queries.GET_LEARNED_WORDS_COUNT),
+            {
+                '$max_repetition': max_repetition,
+                '$chat_id': chat_id,
+            },
+            commit_tx=True,
+        )
+        return result_sets[0].rows
+
+    def get_new_words_count(self, session, chat_id: int):
+        result_sets = session.transaction(ydb.SerializableReadWrite()).execute(
+            session.prepare(ydb_queries.GET_NEW_WORDS_COUNT),
+            {
                 '$chat_id': chat_id,
             },
             commit_tx=True,

@@ -51,6 +51,7 @@ class Commands(Enum):
     REPEATED = '/repeated'
     MORE = '/more'
     REGISTER_COMMANDS = '/register'
+    STATISTICS = '/statistics'
 
 
 class Keyboards():

@@ -35,9 +35,11 @@ class YaTranslate():
             response = requests.post(self.url, data=json.dumps(payload), headers=self.headers)
             response.raise_for_status()
             [text, *_] = response.json().get('translations', {})
+            text = text.get('text')
         except Exception:
             logger.exception('Yandex Translate API error.')
-        return text.get('text')
+            text = 'Translation Service Unavailable at This Time'
+        return text
 
 
 class YaDictionary():

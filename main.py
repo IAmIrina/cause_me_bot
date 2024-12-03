@@ -24,24 +24,31 @@ def process_event(event, _) -> dict:
         }
     logger.debug('Incoming message')
     logger.debug(body)
-    with database.get_driver() as driver:
-        with ydb.SessionPool(driver) as pool:
-            chatgpt = storyteller.ChatGPT(**settings.chat_gpt.dict())
-            MSGHandler(
-                pool,
-                telegram.API(
-                    settings.telegram.endpoint,
-                    settings.telegram.token,
-                ),
-                settings.dictionary,
-                settings.translate,
-                reminders.WordReminder(
+    try:
+        with database.get_driver() as driver:
+            with ydb.SessionPool(driver) as pool:
+                chatgpt = storyteller.ChatGPT(**settings.chat_gpt.dict())
+                MSGHandler(
                     pool,
-                    telegram.API(settings.telegram.endpoint, settings.telegram.token),
-                    chatgpt,
-                ),
-                chatgpt
-            ).process(body)
+                    telegram.API(
+                        settings.telegram.endpoint,
+                        settings.telegram.token,
+                    ),
+                    settings.dictionary,
+                    settings.translate,
+                    reminders.WordReminder(
+                        pool,
+                        telegram.API(settings.telegram.endpoint, settings.telegram.token),
+                        chatgpt,
+                    ),
+                    chatgpt
+                ).process(body)
+    except Exception as err:
+        logger.exception(
+            'Can not handle telegram message. Error %s, message %s',
+            err,
+            str(body),
+        )
     return {
         'statusCode': HTTPStatus.OK,
     }

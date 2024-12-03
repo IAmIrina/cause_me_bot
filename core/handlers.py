@@ -72,10 +72,14 @@ class MSGHandler():
             elif message.text == schemas.Commands.REGISTER_COMMANDS.value:
                 response = self.set_my_commands()
             else:
-                response = self.process_new_word(
-                    chat_id=message.from_.id,
-                    word=message.text.strip(),
-                )
+                if len(message.text) > config.settings.max_message_len:
+                    response = schemas.TLGResponse(
+                        text=messages.MESSAGE_TOO_LONG.format(max_len=config.settings.max_message_len))
+                else:
+                    response = self.process_new_word(
+                        chat_id=message.from_.id,
+                        word=message.text.strip(),
+                    )
             if response:
                 self.bot.send_message(
                     chat_id=message.from_.id,

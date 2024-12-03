@@ -82,6 +82,7 @@ class Telegram(EnvBaseSettings):
 class Settings(EnvBaseSettings):
     intervals: t.List[int] = [1, 2, 3, 5, 8, 13, 21, 32, 55, 89]
     daily_limit: int = 7
+    max_message_len: int = 100
     ydb = YDB()
     telegram = Telegram()
     dictionary = Dictionary()

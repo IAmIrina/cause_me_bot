@@ -31,3 +31,4 @@ These words need to be reviewed to keep them fresh in your memory!
 🆕 New Words: {new_words_count}
 New words just added to your learning list. Time to get started!
 """
+MESSAGE_TOO_LONG = 'Whoa, That is a long one! Please keep your message under {max_len} characters.'
